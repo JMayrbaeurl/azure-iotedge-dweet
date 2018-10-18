@@ -20,6 +20,8 @@ namespace DweetModule
 
         static string dweetThingname;
 
+        static bool verbose = true;
+
         static void Main(string[] args)
         {
             Init(args).Wait();
@@ -53,7 +55,8 @@ namespace DweetModule
             // Open a connection to the Edge runtime
             ModuleClient ioTHubModuleClient = await ModuleClient.CreateFromEnvironmentAsync(settings);
             await ioTHubModuleClient.OpenAsync();
-            Console.WriteLine("Dweet module client initialized.");
+
+            Console.WriteLine("Dweet module client initialized. Waiting on input1 for messages.");
 
             // Register callback to be called when a message is received by the module
             await ioTHubModuleClient.SetInputMessageHandlerAsync("input1", ForwardMessageToDweet, ioTHubModuleClient);
@@ -61,9 +64,31 @@ namespace DweetModule
             if (args != null && args.Length >= 1)
                 dweetThingname = args[0];
             else {
-                dweetThingname = "IoTEdgeInstance";
+                dweetThingname = System.Environment.GetEnvironmentVariable("DWEETTHINGNAME");
+                if (dweetThingname == null || dweetThingname.Length == 0)
+                    dweetThingname = GetDweetThingsname(false);
             }
             Console.WriteLine($"Using '{dweetThingname}' as dweet thing name");
+
+            if (args != null && args.Length >= 2) {
+                if (args[1].Equals("-verbose"))
+                    verbose = true;
+            }
+        }
+
+        static string GetDweetThingsname(bool addModulename) {
+
+            string newDweetThingname = "IoTEdgeInstance";
+
+            string fullIoTHubname = System.Environment.GetEnvironmentVariable("IOTEDGE_IOTHUBHOSTNAME");
+            if (fullIoTHubname != null && fullIoTHubname.Length > 0) {
+                if (addModulename)
+                    newDweetThingname = fullIoTHubname.Split('.')[0] +  "_" + System.Environment.GetEnvironmentVariable("IOTEDGE_MODULEID");
+                else
+                    newDweetThingname = fullIoTHubname.Split('.')[0];
+            }
+
+            return newDweetThingname;
         }
 
         /// <summary>
@@ -83,18 +108,29 @@ namespace DweetModule
 
             byte[] messageBytes = message.GetBytes();
             string messageString = Encoding.UTF8.GetString(messageBytes);
-            Console.WriteLine($"Received message: {counterValue}, Body: [{messageString}]");
+            if (verbose)
+                Console.WriteLine($"Received message: {counterValue}, Body: [{messageString}]");
 
             if (!string.IsNullOrEmpty(messageString))
             {
                 var content = new StringContent(messageString);
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                HttpResponseMessage response =  await client.PostAsync($"https://dweet.io/dweet/for/{dweetThingname}", content);
-                if (response.IsSuccessStatusCode)
-                    Console.WriteLine("Received message fowarded to dweet");
-                else
+                string dweetURL = "https://dweet.io/dweet/for/" + dweetThingname;
+
+                if (verbose)
+                    Console.WriteLine("Forward message to dweet: '" + dweetURL + "'");
+
+                HttpResponseMessage response =  await client.PostAsync(dweetURL, content);
+                if (response.IsSuccessStatusCode) {
+                    if (verbose)
+                        Console.WriteLine("Received message fowarded to dweet");
+                } else
                     Console.WriteLine("Error response from Dweet: " + response.ReasonPhrase);
+            } else {
+                if (verbose)
+                    Console.WriteLine("Empty message string received!");
             }
+
             return MessageResponse.Completed;
         }
     }

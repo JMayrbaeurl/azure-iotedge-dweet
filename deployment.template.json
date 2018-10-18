@@ -30,16 +30,6 @@
           }
         },
         "modules": {
-          "tempSensor": {
-            "version": "1.0",
-            "type": "docker",
-            "status": "running",
-            "restartPolicy": "always",
-            "settings": {
-              "image": "mcr.microsoft.com/azureiotedge-simulated-temperature-sensor:1.0",
-              "createOptions": ""
-            }
-          },
           "DweetModule": {
             "version": "1.0",
             "type": "docker",
@@ -47,6 +37,16 @@
             "restartPolicy": "always",
             "settings": {
               "image": "${MODULES.DweetModule.amd64}",
+              "createOptions": "{\"Env\":[\"DWEETTHINGNAME=JuergensEdgeTest01\"]}"
+            }
+          },
+          "TemperatureSimulatorModule": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "${MODULES.TemperatureSimulatorModule.amd64}",
               "createOptions": ""
             }
           }
@@ -57,8 +57,8 @@
       "properties.desired": {
         "schemaVersion": "1.0",
         "routes": {
-          "DweetModuleToIoTHub": "FROM /messages/modules/DweetModule/outputs/* INTO $upstream",
-          "sensorToDweetModule": "FROM /messages/modules/tempSensor/outputs/temperatureOutput INTO BrokeredEndpoint(\"/modules/DweetModule/inputs/input1\")"
+          "sensorToDweetModule": "FROM /messages/modules/TemperatureSimulatorModule/outputs/* INTO BrokeredEndpoint(\"/modules/DweetModule/inputs/input1\")",
+          "TemperatureSimulatorModuleToIoTHub": "FROM /messages/modules/TemperatureSimulatorModule/outputs/* INTO $upstream"
         },
         "storeAndForwardConfiguration": {
           "timeToLiveSecs": 7200
