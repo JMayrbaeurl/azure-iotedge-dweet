@@ -10,6 +10,10 @@ This is a simple [Azure IoT Edge](https://azure.microsoft.com/en-us/services/iot
 ```
 Only messages sent to 'input1' of the module will be forwarded accordingly. As an example this project contains a temperature simulator module, too, that can be used for testing.
 
+Pre-built images are available on DockerHub:
+* Dweet module: **jmayrbaeurl/azureiotedge-dweetio:0.0.1-amd64**
+* Temperature and humidity simulation module: **jmayrbaeurl/azureiotedge-temphumsimulator:0.0.1-amd64**
+
 ## Configuration
 
 ### Dweet thing name
