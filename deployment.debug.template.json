@@ -57,7 +57,7 @@
             "status": "running",
             "restartPolicy": "always",
             "settings": {
-              "image": "${MODULES.DweetModule}",
+              "image": "${MODULES.DweetModule.debug}",
               "createOptions": "{\"Env\":[\"DWEETTHINGNAME=JuergensEdgeTest01\"]}"
             }
           },
@@ -67,7 +67,7 @@
             "status": "running",
             "restartPolicy": "always",
             "settings": {
-              "image": "${MODULES.TemperatureSimulatorModule}",
+              "image": "${MODULES.TemperatureSimulatorModule.debug}",
               "createOptions": ""
             }
           }
